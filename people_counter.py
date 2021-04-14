@@ -20,7 +20,7 @@ left = 0
 textOut = 0
 textIn = 0
 
-THRESHOLD_VAL = 80
+THRESHOLD_VAL = 70
 CONTOUR_AREA_MIN = 20000
 BACKGROUND_THRESH = 10
 
@@ -37,7 +37,11 @@ def writeCsv(str):
 
 
 
-
+# Possible ways to ignore background:
+#  1. find all countors in background (first_image), keep in data struct
+#  2. xor our all countors in bckground
+#  3. once new object detected, keep all white pixels that are part of the object,
+#	even if in same position as background contour 
 
 
 if __name__ == "__main__":
@@ -45,6 +49,7 @@ if __name__ == "__main__":
     camera = cv2.VideoCapture(0)
     first_frame = None
     old_gray = 0
+    first_frame_flag = 0
 
     
     # loop over the frames of the video
@@ -65,7 +70,7 @@ if __name__ == "__main__":
 	# First convert to grayscale to reduce complexity
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	# Then, blur (smooth) the image to eliminate noise
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        gray = cv2.GaussianBlur(gray, (41, 41), 0)
 	#cv2.imshow("Gray Blur", gray)
 
         # if the first frame is None, initialize it
@@ -73,29 +78,13 @@ if __name__ == "__main__":
             first_frame = gray
             #continue
 
-	# +-------------------------- MEAT ---------------------------------+
-	#   This looks to be the real meat of the program - transformations  and
-	# and finding contours
-
-	# NOTE: I think you can find contours w/o absdiff. But you will need the diff 
-	# if you want to focus on just the people
-
         # compute the absolute difference between the current frame and
         # first frame
         #frameDelta = cv2.absdiff(old_gray, gray)
 	# if this frame isn't background, OR our new frame on the background
 	#thresh = cv2.threshold(frameDelta, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
-	#thresh = cv2.threshold(first_frame, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
-
-        #thresh = cv2.threshold(frameDelta, THRESHOLD_VAL, 255, cv2.THRESH_BINARY)[1]
-	# Put dark objects to white, light to black, use image delta 
-	#thresh = cv2.threshold(frameDelta, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
-
-	# Put dark objects to black, light to white, use current image
-	#thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
 
 	# Put dark objects to white, light to black, use current image 
-	#thresh = cv2.threshold(gray, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
 	thresh = cv2.threshold(gray, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
 
         # dilate the thresholded image to fill in holes, then find contours
@@ -112,7 +101,6 @@ if __name__ == "__main__":
 	cv2.line(frame, (width // 2 - 50, 0), (width //2 - 50, height), (0, 0, 255), 2)  # red line
 
         # loop over the contours
-	# +-----------------------------------------------------------------+
         for c in cnts:
             #print(c)
             # if the contour is too small, ignore it
