@@ -20,8 +20,8 @@ left = 0
 textOut = 0
 textIn = 0
 
-THRESHOLD_VAL = 70
-CONTOUR_AREA_MIN = 20000
+THRESHOLD_VAL = 80
+CONTOUR_AREA_MIN = 15000
 BACKGROUND_THRESH = 10
 
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 	# First convert to grayscale to reduce complexity
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	# Then, blur (smooth) the image to eliminate noise
-        gray = cv2.GaussianBlur(gray, (41, 41), 0)
+        gray = cv2.GaussianBlur(gray, (21, 21), 0)
 	#cv2.imshow("Gray Blur", gray)
 
         # if the first frame is None, initialize it
