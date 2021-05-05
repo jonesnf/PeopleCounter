@@ -9,7 +9,7 @@ import csv
 width = 600     # Camera width (x)
 height = width 
 
-body = 50        # used to set range of body boundary
+body = 60        # used to set range of body boundary
 
 
 blue= width/2 - 50    # location left boundary
