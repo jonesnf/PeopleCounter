@@ -41,7 +41,7 @@ def writeCsv(str):
 #  1. find all countors in background (first_image), keep in data struct
 #  2. xor our all countors in bckground
 #  3. once new object detected, keep all white pixels that are part of the object,
-#	even if in same position as background contour 
+#   even if in same position as background contour 
 
 
 if __name__ == "__main__":
@@ -50,6 +50,8 @@ if __name__ == "__main__":
     first_frame = None
     old_gray = 0
     first_frame_flag = 0
+
+    mog = cv2.createBackgroundSubtractorMOG2()
 
     
     # loop over the frames of the video
@@ -65,13 +67,14 @@ if __name__ == "__main__":
             break
 
         # resize the frame, convert it to grayscale, and blur (smooth) it
-	# NOTE: based on the source code, imutils really only uses the width 
+        # NOTE: based on the source code, imutils really only uses the width 
         frame = imutils.resize(frame, width)
-	# First convert to grayscale to reduce complexity
+        # First convert to grayscale to reduce complexity
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	# Then, blur (smooth) the image to eliminate noise
+        mog.apply(gray)
+        # Then, blur (smooth) the image to eliminate noise
         gray = cv2.GaussianBlur(gray, (21, 21), 0)
-	#cv2.imshow("Gray Blur", gray)
+        #cv2.imshow("Gray Blur", gray)
 
         # if the first frame is None, initialize it
         if first_frame is None:
@@ -81,24 +84,25 @@ if __name__ == "__main__":
         # compute the absolute difference between the current frame and
         # first frame
         #frameDelta = cv2.absdiff(old_gray, gray)
-	# if this frame isn't background, OR our new frame on the background
-	#thresh = cv2.threshold(frameDelta, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
+        # if this frame isn't background, OR our new frame on the background
+        #thresh = cv2.threshold(frameDelta, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
 
-	# Put dark objects to white, light to black, use current image 
-	thresh = cv2.threshold(gray, THRESHOLD_VAL, 255, cv2.THRESH_BINARY_INV)[1]
+        # Put dark objects to white, light to black, use current image 
+        thresh = cv2.threshold(gray, THRESHOLD_VAL, 255, cv2.THRESH_BINARY)[1]
 
         # dilate the thresholded image to fill in holes, then find contours
         # on thresholded image
         thresh = cv2.dilate(thresh, None, iterations=2)
-	# This function looks for contours of white 
-        cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+        # This function looks for contours of white 
+        #NOTE: OpenCV 4.1 uses 0-index member of this, <4 uses [1]
+        cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
         
-	# grab previous frame
-	old_gray = gray
+        # grab previous frame
+        old_gray = gray
 
-	# Setup screen 
-	cv2.line(frame, (width // 2, 0), (width // 2, height), (250, 0, 1), 2)  # blue line
-	cv2.line(frame, (width // 2 - 50, 0), (width //2 - 50, height), (0, 0, 255), 2)  # red line
+        # Setup screen 
+        cv2.line(frame, (width // 2, 0), (width // 2, height), (250, 0, 1), 2)  # blue line
+        cv2.line(frame, (width // 2 - 50, 0), (width //2 - 50, height), (0, 0, 255), 2)  # red line
 
         # loop over the contours
         for c in cnts:
@@ -113,9 +117,9 @@ if __name__ == "__main__":
 
 
             rectangleCenterPoint = ( x +( w // 2), y +( h // 2))
-	    cv2.putText(frame, "HANDSOME MAN", (rectangleCenterPoint[0] - 15,\
-			rectangleCenterPoint[1] - 10), cv2.FONT_HERSHEY_SIMPLEX,\
-		        0.5, (0,0,255), 2)
+            cv2.putText(frame, "HANDSOME MAN", (rectangleCenterPoint[0] - 15,\
+            rectangleCenterPoint[1] - 10), cv2.FONT_HERSHEY_SIMPLEX,\
+                0.5, (0,0,255), 2)
             cv2.circle(frame, rectangleCenterPoint, 1, (0, 0, 255), 5)
             center = (x + (w //2))
             if (center - body) < blue and (center + body) >blue:
@@ -143,16 +147,16 @@ if __name__ == "__main__":
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        cv2.putText(frame, "In: {}".format(str(textIn)), (10, 50),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        cv2.putText(frame, "Out: {}".format(str(textOut)), (10, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
-                   (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+        #cv2.putText(frame, "In: {}".format(str(textIn)), (10, 50),
+        #           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #cv2.putText(frame, "Out: {}".format(str(textOut)), (10, 70),
+        #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
+        #          (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
         cv2.imshow("Thresh", thresh)
         #cv2.imshow("First_Thresh", first_thresh)
         #cv2.imshow("Curr_Thresh", curr_thresh)
-	cv2.imshow("Security Feed", frame)
+        cv2.imshow("Security Feed", frame)
 
     # cleanup the camera and close any open windows
     camera.release()
