@@ -71,7 +71,10 @@ if __name__ == "__main__":
         frame = imutils.resize(frame, width)
         # First convert to grayscale to reduce complexity
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        cv2.imshow("GRAY1", gray)
+
         mog.apply(gray)
+        cv2.imshow("GRAY2", gray)
         # Then, blur (smooth) the image to eliminate noise
         gray = cv2.GaussianBlur(gray, (21, 21), 0)
         #cv2.imshow("Gray Blur", gray)
