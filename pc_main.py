@@ -6,7 +6,12 @@ import person
 
 width = 600
 height = width
+PROXIMITY_THRESH = 60
 CONTOUR_AREA_MIN = 10000
+
+# TODO: determine if customer is leaving frame 
+def leaving_frame(x, y):
+    return 1
 
 # Calculate diff between previously stored person and possibly 
 #  new object coordinates to determine if new person or not 
@@ -16,8 +21,8 @@ def prev_detect(x, y, person, pt):
     return True if (diff_x <= pt and diff_y <= pt) else False
 
 if __name__ == "__main__":
-    add_new_person = False
-    proximity_th = 100;
+    add_new_person = True 
+    proximity_th = PROXIMITY_THRESH 
     people_arr = []
     cv2.startWindowThread()
     cap = cv2.VideoCapture(0)
@@ -45,19 +50,29 @@ if __name__ == "__main__":
         for c in contours:
             if cv2.contourArea(c) < CONTOUR_AREA_MIN:
                 continue
+            add_new_person = True
+            curr_person_id = 0
             # Get wid, height, and starting loc of contour
             (x, y, w, h) = cv2.boundingRect(c)
             mom_data = cv2.moments(c)
             centr_x = int(mom_data['m10'] / mom_data['m00'])
             centr_y = int(mom_data['m01'] / mom_data['m00'])
-            # TODO: track object
-            #for person in people_arr:
-            #    if prev_detec(rect_center[0], rect_center[1], person, proximity_th):
+            # Is this a new person? (using proximity threshold)
+            for p in people_arr:
+                curr_person_id = p.id
+                if prev_detect(centr_x, centr_y, p, proximity_th):
                     #update person file
-                
+                    p.update_loc(centr_x, centr_y)
+                    add_new_person = False
+            if add_new_person:
+                curr_person_id += 1
+                print("Added new person! ID: %s" % curr_person_id)
+                new_person = person.Person(curr_person_id, centr_x, centr_y) 
+                people_arr.append(new_person)    
             # Draw items around person
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(frame, "CUSTOMER", (centr_x - 15,\
+            nametag = "ID " + str(people_arr[curr_person_id-1].id)
+            cv2.putText(frame, nametag, (centr_x - 15,\
                 centr_y - 10), cv2.FONT_HERSHEY_SIMPLEX,\
                 0.5, (0,0,255), 2)
             cv2.circle(frame, (centr_x, centr_y), 1, (0, 0, 255), 5)
