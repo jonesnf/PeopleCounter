@@ -12,3 +12,4 @@ class Person:
 
     def ret_loc(self):
         return (self.x, self.y)
+
