@@ -14,3 +14,9 @@ class Person:
     def ret_loc(self):
         return (self.x, self.y)
 
+    def leaving_store(self):
+        return 1
+
+    def entering_store(self):
+        return 1
+        

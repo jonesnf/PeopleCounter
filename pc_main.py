@@ -6,8 +6,10 @@ import person
 
 width = 600
 height = width
-PROXIMITY_THRESH = 60
+PROXIMITY_THRESH = 90
 CONTOUR_AREA_MIN = 10000
+FRAME_BOUND_L = 0
+FRAME_BOUND_R = width
 
 # TODO: determine if customer is leaving frame 
 def leaving_frame(x, y):
@@ -18,7 +20,9 @@ def leaving_frame(x, y):
 def prev_detect(x, y, person, pt):
     diff_x = abs(x - person.x)
     diff_y = abs(y - person.y)
-    return True if (diff_x <= pt and diff_y <= pt) else False
+    euclidean_dist = np.sqrt(np.square(diff_x) + np.square(diff_y)) 
+    #return True if (diff_x <= pt and diff_y <= pt) else False
+    return True if euclidean_dist <= 100 else False
 
 if __name__ == "__main__":
     add_new_person = True 
@@ -26,6 +30,9 @@ if __name__ == "__main__":
     people_arr = []
     cv2.startWindowThread()
     cap = cv2.VideoCapture(0)
+    # TODO: figure our ratio for history, and varThreshold
+    # - probably going to want high history since folks will be moving slow usually
+    #fgbg = cv2.createBackgroundSubtractorMOG2(history=50, varThreshold=20)
     fgbg = cv2.createBackgroundSubtractorMOG2()
     kernel_op = np.ones((3,3), np.uint8)
     kernel_cl = np.ones((10,10), np.uint8)
@@ -38,6 +45,8 @@ if __name__ == "__main__":
         cv2.line(frame, (width // 2 - 50, 0), (width // 2 - 50, height), (0, 0, 255), 2)  # red line
         # apply background subtractor to our frame
         fgmask = fgbg.apply(frame)
+        # TODO: not sure if I like using threshold or not 
+        #_, fgmask = cv2.threshold(fgmask, 254, 255, cv2.THRESH_BINARY)
         #cv2.imshow('frame', frame)
         cv2.imshow('fgmask', fgmask)
         # Erode->dilate pixels in frame using smaller kernel
@@ -52,7 +61,7 @@ if __name__ == "__main__":
                 continue
             add_new_person = True
             curr_person_id = 0
-            # Get wid, height, and starting loc of contour
+            # Get width, height, and starting loc of bound rectangle 
             (x, y, w, h) = cv2.boundingRect(c)
             mom_data = cv2.moments(c)
             centr_x = int(mom_data['m10'] / mom_data['m00'])
