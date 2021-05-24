@@ -29,7 +29,7 @@ if __name__ == "__main__":
     proximity_th = PROXIMITY_THRESH 
     people_arr = []
     cv2.startWindowThread()
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("http://192.168.1.25:8000/stream.mjpg")
     # TODO: figure our ratio for history, and varThreshold
     # - probably going to want high history since folks will be moving slow usually
     #fgbg = cv2.createBackgroundSubtractorMOG2(history=50, varThreshold=20)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         # TODO: not sure if I like using threshold or not 
         #_, fgmask = cv2.threshold(fgmask, 254, 255, cv2.THRESH_BINARY)
         #cv2.imshow('frame', frame)
-        cv2.imshow('fgmask', fgmask)
+        #cv2.imshow('fgmask', fgmask)
         # Erode->dilate pixels in frame using smaller kernel
         opening = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel_op)
         #cv2.imshow("opening", opening)
